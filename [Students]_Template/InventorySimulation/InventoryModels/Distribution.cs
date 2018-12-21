@@ -12,6 +12,7 @@ namespace InventoryModels
         {
 
         }
+        public bool IsCalculated { get; set; }
         public int Value { get; set; }
         public decimal Probability { get; set; }
         public decimal CummProbability { get; set; }
