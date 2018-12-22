@@ -137,8 +137,7 @@ namespace InventorySimulation
         /// <param name="path">path to simulation system file</param>
         static public SimulationSystem FromFile(string path)
         {
-            FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read);
-            StreamReader reader = new StreamReader(file);
+            StreamReader reader = new StreamReader(new FileStream(path, FileMode.Open, FileAccess.Read));
             SimulationSystem system = new SimulationSystem();
             while (reader.Peek() != -1)
             {
@@ -155,23 +154,17 @@ namespace InventorySimulation
                         {
                             s.Trim();
                             if (s.Split(',').Length > 1 && h.IsOneArgument)
-                            {
                                 throw new FormatException("Header \"" + header + "\" expects only a single argument per line, receieved " + lines.Count + " arguments");
-                            }
                             lines.Add(s);
                         }
                         if (h.IsSingleLine && lines.Count > 1)
-                        {
                             throw new FormatException("Header \"" + header + "\" expects only a single line, receieved " + lines.Count + " lines");
-                        }
                         h.Input(system, lines.ToArray());
                         break;
                     }
                 }
                 if (!HeaderFound)
-                {
                     throw new ArgumentException("Header \"" + header + "\" is not defined");
-                }
             }
             reader.Close();
             return system;

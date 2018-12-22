@@ -102,6 +102,7 @@ static class Simulator
                 DueDate = system.StartLeadDays
             }
         };
+        system.SimulationTable.Clear();
         for(int i = 0; i < system.NumberOfDays; i++)
         {
             SimulationCase Case = GenerateCase(system, inventory, i);
