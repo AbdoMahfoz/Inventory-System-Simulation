@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using InventoryModels;
 
 /// <summary>
@@ -13,7 +10,7 @@ static class Simulator
     /// <summary>
     /// Guess what??? A Random Generator!
     /// </summary>
-    static Random rnd = new Random((int)DateTime.Now.Ticks);
+    static Random rnd = new Random();
     /// <summary>
     /// This is the fourth time i have used this function, you should know what it does by now..
     /// </summary>
@@ -52,10 +49,12 @@ static class Simulator
     static private SimulationCase GenerateCase(SimulationSystem system, Inventory inventory, int Day)
     {
         int R1 = rnd.Next(1, 100);
-        int V1 = CalculateRandomValue(system.DemandDistribution, R1);
+        int CurrentDemand = CalculateRandomValue(system.DemandDistribution, R1);
+        int CarryOverShortage = 0;
         if(inventory.CurrentOrder != null && inventory.CurrentOrder.DueDate == Day)
         {
-            inventory.Quantity += inventory.CurrentOrder.Quantity;
+            CarryOverShortage = Math.Min(inventory.Quantity, 0) * -1;
+            inventory.Quantity = Math.Max(inventory.Quantity, 0) + inventory.CurrentOrder.Quantity;
             inventory.CurrentOrder = null;
         }
         SimulationCase Case = new SimulationCase()
@@ -65,11 +64,11 @@ static class Simulator
             BeginningInventory = Math.Max(0, inventory.Quantity),
             DayWithinCycle = (Day % system.ReviewPeriod) + 1,
             RandomDemand = R1,
-            Demand = V1,
-            EndingInventory = Math.Max(0, inventory.Quantity - V1),
-            ShortageQuantity = Math.Max(0, V1 - inventory.Quantity)
+            Demand = CurrentDemand,
+            EndingInventory = Math.Max(0, inventory.Quantity - CurrentDemand - CarryOverShortage),
+            ShortageQuantity = Math.Max(0, CarryOverShortage + CurrentDemand - inventory.Quantity)
         };
-        inventory.Quantity -= V1;
+        inventory.Quantity -= CurrentDemand + CarryOverShortage;
         return Case;
     }
     /// <summary>
@@ -107,6 +106,7 @@ static class Simulator
         {
             SimulationCase Case = GenerateCase(system, inventory, i);
             CheckFullCycle(system, Case, inventory);
+            system.SimulationTable.Add(Case);
             system.PerformanceMeasures.EndingInventoryAverage += Case.EndingInventory;
             system.PerformanceMeasures.ShortageQuantityAverage += Case.ShortageQuantity;
         }
